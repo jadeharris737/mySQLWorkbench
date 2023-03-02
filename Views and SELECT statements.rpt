@@ -1,0 +1,168 @@
+mysql> source solution3.sql
+--------------
+/*
+Insert into the file the implementations of the following queries as SELECT statements of SQL.
+
+Your implementation must directly follow a comment with a specification of a subtask.
+*/
+
+/* 
+  The queries listed below must be implemented as nested SELECT statements with IN/NOT IN set membership operation.
+*/
+
+/* 
+(1)	Find the product number, price and manufacturer that have no keyword.
+	Hint: Consider the tables Product and Keyword.
+*/
+SELECT pNumber, price, manufacturer 
+FROM Product p
+WHERE p.pNumber NOT IN (SELECT pNumber FROM Keyword)
+--------------
+
++---------+-------+--------------+
+| pNumber | price | manufacturer |
++---------+-------+--------------+
+|       6 | 36.85 | ABC Pty Ltd  |
+|      16 | 15.15 | ABC Pty Ltd  |
+|      17 | 11.95 | ABC Pty Ltd  |
+|      18 | 13.95 | ABC Pty Ltd  |
+|      19 | 21.75 | CBC Pty Ltd  |
+|      20 | 30.65 | ABC Pty Ltd  |
+|      21 | 25.35 | BBC Pty Ltd  |
+|      22 | 12.15 | ABC Pty Ltd  |
+|      23 | 16.35 | ABC Pty Ltd  |
++---------+-------+--------------+
+9 rows in set (0.00 sec)
+
+--------------
+/* 
+(2)	Find the customer number and full name (fname, lname) for all customers that have created baskets of products.
+	Hint: Consider the tables Customer and Pbasket.
+*/
+
+
+SELECT cNumber, fname, lname
+FROM Customer c
+WHERE c.cNumber IN (SELECT cNumber FROM Pbasket)
+--------------
+
++---------+---------+----------+
+| cNumber | fname   | lname    |
++---------+---------+----------+
+|       1 | PETER   | JONES    |
+|       3 | MARY    | WHITE    |
+|       4 | MICHAEL | COLLINS  |
+|       6 | GARY    | KASPAROW |
+|       7 | CLAUDIA | HOFFMAN  |
+|       8 | STEPHEN | STAUNTON |
+|       9 | JOSEPH  | STAUNTON |
+|      10 | ROBERT  | SMITH    |
++---------+---------+----------+
+8 rows in set (0.00 sec)
+
+--------------
+  
+/* 
+The queries (3) and (4) listed below must be implemented as nested queries with EXISTS/NOT EXISTS clauses.
+*/
+
+/*
+(3)	Find the product number, price, and manufacturer of all the products that have been ranked.
+	Hint: Consider the tables Product and Cevaluation.
+*/
+
+SELECT pNumber, price, manufacturer
+FROM Product p
+WHERE EXISTS (SELECT pNumber
+FROM Cevaluation c 
+WHERE c.pNumber = p.pNumber)
+--------------
+
++---------+-------+--------------+
+| pNumber | price | manufacturer |
++---------+-------+--------------+
+|       1 |  6.25 | ABC Pty Ltd  |
+|       2 |  3.15 | ABC Pty Ltd  |
+|       5 | 10.75 | BBC Pty Ltd  |
+|       6 | 36.85 | ABC Pty Ltd  |
+|       8 |  6.35 | CBC Pty Ltd  |
+|      18 | 13.95 | ABC Pty Ltd  |
++---------+-------+--------------+
+6 rows in set (0.00 sec)
+
+--------------
+/* 
+(4)	Find the customer number and full name (fname, lname) of all customers that have not evaluated any product.
+	Hint: Consider the tables Customer and Cevaluation.
+*/
+
+SELECT cNumber, fname, lname  
+FROM Customer c
+WHERE NOT EXISTS (SELECT * FROM Cevaluation ce WHERE c.cNumber = ce.cNumber)
+--------------
+
++---------+---------+----------+
+| cNumber | fname   | lname    |
++---------+---------+----------+
+|       3 | MARY    | WHITE    |
+|       4 | MICHAEL | COLLINS  |
+|       6 | GARY    | KASPAROW |
+|       7 | CLAUDIA | HOFFMAN  |
+|       9 | JOSEPH  | STAUNTON |
++---------+---------+----------+
+5 rows in set (0.00 sec)
+
+--------------
+/* 
+  The queries listed below must be implemented with a WITH clause. 
+*/
+
+/* 
+(5)	Find the product number, price, and manufacturer of all products that have the maximum number of keywords.
+	Hint: Count the total number of keywords for each product. Find the maximum value. Then compare the number of keywords with the maximum value to find the expected product number. 
+    Use the product number found for the product details.
+*/
+
+
+WITH
+kwordTotal AS (SELECT pNumber, COUNT(kword) as total FROM Keyword GROUP BY pNumber),
+kwordMax AS (SELECT MAX(total) as maxKwordTotal FROM kwordTotal)
+SELECT pNumber, price, manufacturer
+FROM Product p
+WHERE EXISTS (SELECT kwordTotal.pNumber FROM kwordTotal WHERE (kwordTotal.pNumber = p.pNumber) AND (kwordTotal.total IN (SELECT kwordMax.maxKwordTotal FROM kwordMax)))
+--------------
+
++---------+-------+--------------+
+| pNumber | price | manufacturer |
++---------+-------+--------------+
+|       1 |  6.25 | ABC Pty Ltd  |
++---------+-------+--------------+
+1 row in set (0.00 sec)
+
+--------------
+    
+/*
+(6)	Find the customer number and full name (fname, lname) of the customers that have the biggest product basket.
+	Note: The biggest product basket is a basket that contains the maximum total number of products.
+	Hint: Count the total number of products for each basket. Find the maximum value. Then compare the product number of baskets with the maximum value to find the expected basket. 
+    Use the basket found before to find the customer.
+*/
+
+WITH
+productTotal AS (SELECT COUNT(*) as total, whenfinalised FROM PP GROUP BY whenfinalised),
+productMax AS (SELECT MAX(total) as maxProductTotal FROM productTotal),
+customers AS (SELECT cNumber FROM Pbasket WHERE EXISTS (SELECT productTotal.whenfinalised FROM productTotal WHERE (Pbasket.whenfinalised = productTotal.whenfinalised) AND (productTotal.total IN (SELECT productMax.maxProductTotal FROM productMax))))
+SELECT cNumber, fname, lname
+FROM Customer
+WHERE EXISTS (SELECT customers.cNumber FROM customers WHERE customers.cNumber = Customer.cNumber)
+--------------
+
++---------+---------+----------+
+| cNumber | fname   | lname    |
++---------+---------+----------+
+|       7 | CLAUDIA | HOFFMAN  |
+|       8 | STEPHEN | STAUNTON |
++---------+---------+----------+
+2 rows in set (0.00 sec)
+
+mysql> notee;

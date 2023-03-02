@@ -1,0 +1,113 @@
+mysql> use csit115;
+Database changed
+mysql> source solution3_1-3.sql
+--------------
+/*
+	Your implementation must directly follow a comment with a specification of a subtask.
+*/
+
+/*
+(1) First, the script makes a relational table that contains a general log empty.
+(0.3 marks)
+*/
+TRUNCATE TABLE mysql.general_log
+--------------
+
+Query OK, 0 rows affected (0.04 sec)
+
+--------------
+/* 
+(2) Next, the script sets the appropriate values of the variables to save a general log in a 
+relational table and to start recording a general log from now.
+(0.5 marks)
+*/
+SET global general_log = 'ON'
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+SET global log_output = 'TABLE'
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/* 
+(3)	Next, the script makes a database csit115 a default database, it stops recording a 
+report, it executes a script file dbupdates.sql, and it resumes recording a report 
+into a file solution3.rpt.
+
+A listing of the processing results from a script file dbupdates.sql must 
+NOT be included in the report file solution3.rpt.
+(0.5 marks)
+*/
+
+
+
+/*  Then,
+    Use the commands below for this question
+    notee;
+	use csit115;
+	source dbupdates.sql;
+	tee solution3.rpt;
+*/
+use csit115
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*
+	Your implementation must directly follow a comment with a specification of a subtask.
+*/
+
+/* 
+(4)	Next, the script sets the appropriate values of all variables to stop recording a general 
+log from now.
+(0.2 marks)
+*/
+SET global general_log = 'OFF'
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/* 
+(5)	Finally, the script finds and lists how many times each one of the relational tables 
+included in a sample database have been used by the successfully processed SQL 
+statements included in SQL script dbupdates.sql. You only need to consider the 
+relational tables with the following names Pbasket and PP. No other relational 
+tables need to be considered. The script must list the names of relational tables 
+together with the total number of times each table has been used. Please, find a 
+fragment of a sample output listed below.
++------------+-------+
+| TABLE_NAME | TOTAL |
++------------+-------+
+  ... 	  	   	 ...
++------------+-------+
+2 rows in set (0.01 sec)
+
+To simplify this task, assume that a relational table is used no more than one time in 
+a SQL statement.
+
+The results must be listed in the ascending order of the relational tables’ names after 
+the successfully processed SQL statements included in a script dbupdates.sql.
+(1.5 marks)
+*/
+WITH PBASKET_COUNT AS 
+(SELECT 'PBASKET' TABLE_NAME, COUNT(*) TOTAL FROM mysql.general_log WHERE argument LIKE '%Pbasket%'),
+PP_COUNT AS (SELECT 'PP' TABLE_NAME, COUNT(*) TOTAL FROM mysql.general_log WHERE argument like '%PP%'),
+ALL_COUNT AS (SELECT * FROM PBASKET_COUNT UNION SELECT * FROM PP_COUNT)
+SELECT * FROM ALL_COUNT ORDER BY TABLE_NAME ASC
+--------------
+
++------------+-------+
+| TABLE_NAME | TOTAL |
++------------+-------+
+| PBASKET    |     3 |
+| PP         |     3 |
++------------+-------+
+2 rows in set (0.01 sec)
+
+mysql> notee
